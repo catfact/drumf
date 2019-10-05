@@ -164,5 +164,11 @@ Engine_Drumf : CroneEngine {
 			});
 		});
 	}
+	
+	free {
+		trig_bus.do ({ arg bus; bus.free; });
+		drum_synth.do({ arg synth; synth.free; });
+	}
+
 
 }

@@ -29,6 +29,7 @@ local clk = BeatClock.new()
 
 clk.on_step = function() 
   pattern_1:advance()
+  redraw()
 end
 
 dr_start = function() 
@@ -52,6 +53,13 @@ local KEY_MODE_PLAY = 1
 local KEY_MODE_WRITE = 2
 local key_mode = KEY_MODE_PLAY
 
+local function write_current_stage(pattern, value)
+  print("writing value: "..value .. " to stage: "..pattern.stage_index)
+  pattern.stage_data[pattern.stage_index] = value
+  pattern:advance()
+  redraw()
+end
+
 local key_press = function(key)
   -- TODO: switch handlers instead of testing in the handler
   if key_mode == KEY_MODE_PLAY  then
@@ -61,16 +69,16 @@ local key_press = function(key)
     if key == 3 then
       dr_stop()
     end
-    if key_mode == KEY_MODE_WRITE  then
-      if key == 2 then
-        -- TODO
-    end
-      if key == 3 then
-       -- TODO
-      end
+  elseif key_mode == KEY_MODE_WRITE  then
+    if key == 2 then
+      write_current_stage(pattern_1, 1)
+  end
+    if key == 3 then
+      write_current_stage(pattern_1, 0)
     end
   end
 end 
+
 
 -- trigger drums with keys 2, 3
 function key(n,z)
@@ -82,30 +90,35 @@ function key(n,z)
 end 
 
 -- TODO: switch modes
-local function next_mode()
-  print("next mode")
-  if key_mode == KEY_MODE_PLAY then key_mode = KEY_MODE_WRITE end
-  if key_mode == KEY_MODE_WRITE then key_mode = KEY_MODE_PLAY end
+
+local function set_key_mode(mode) 
+  key_mode = mode
+  if mode == KEY_MODE_WRITE then dr_stop() end
   print("key mode: " .. key_mode)
   redraw()
+end 
+
+--[[
+local function next_mode()
+  print("next mode")
+  if key_mode == KEY_MODE_PLAY then set_key_mode(KEY_MODE_WRITE)
+  elseif key_mode == KEY_MODE_WRITE then set_key_mode(KEY_MODE_PLAY) end
 end 
 
 local function previous_mode()
   print("previous mode")
-  if key_mode == KEY_MODE_PLAY then key_mode = KEY_MODE_WRITE end
-  if key_mode == KEY_MODE_WRITE then key_mode = KEY_MODE_PLAY end
-  print("key mode: " .. key_mode)
-  redraw()
+  if key_mode == KEY_MODE_PLAY then set_key_mode(KEY_MODE_WRITE)
+  elseif key_mode == KEY_MODE_WRITE then set_key_mode(KEY_MODE_PLAY) end
 end 
+--]]
 
 -- change filter envelope amount with encoders 2 and 3
 function enc(n, d)
   if n == 1 then
-    print("enc 1; d = " .. d)
     if d > 0 then
-      next_mode()
+      set_key_mode(KEY_MODE_WRITE)
     else
-      previous_mode()
+      set_key_mode(KEY_MODE_PLAY)
     end
   end 
   if n == 2 then
@@ -116,15 +129,52 @@ function enc(n, d)
   end
 end 
 
-function redraw()
-  screen.clear()
-  screen.move(1, 10)
-  screen.text("DR DRUMF")
-  
-  screen.move(1, 20)
+local function draw_mode()
+    screen.move(1, 10)
   if key_mode == KEY_MODE_PLAY then screen.text("PLAY") end
   if key_mode == KEY_MODE_WRITE then screen.text("WRITE") end
+end
+
+local function draw_stage_indicator(pattern, offset)
+  local pat_str = ''
+  for i=1,pattern.num_stages do
+    if pattern.stage_index == i then
+      pat_str = pat_str .. '*'
+    else
+      pat_str = pat_str .. ' '
+    end
+  end
+  screen.move(1, 10 + offset)
+  screen.text(pat_str)
+end
+
+local function draw_pattern(pattern, offset)
+  local pat_str = ''
+  for i=1,pattern.num_stages do
+    if pattern.stage_data[i] > 0 then
+      pat_str = pat_str .. '!'
+    else
+      pat_str = pat_str .. '.'
+    end
+  end
+  screen.move(1, 10 + offset)
+  screen.text(pat_str)
+end
+
+function redraw()
+  screen.clear()
+  screen.font_face(40)
+  screen.font_size(12)
+
+  draw_mode()
+  draw_stage_indicator(pattern_1, 10)
+  draw_pattern(pattern_1, 20)
+
+  -- maybe?
+  -- collectgarbage()
+  
   screen.update()
+  
 end
 
 cleanup = function()

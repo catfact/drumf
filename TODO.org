@@ -1,0 +1,16 @@
+* synth
+- highpass / multimode to fm drum
+- fm mod envelope
+- (mod env abstraction ugen)
+- cymbal algo (stacked square waves)
+- resonant dust
+
+* pattern lib
+- add loop points
+
+* script
+- support multiple tracks/patterns
+- edit loop points
+- clock division per track?
+- save/restore pattern data
+- save/restore engine params

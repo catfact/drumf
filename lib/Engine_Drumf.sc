@@ -1,3 +1,13 @@
+DrumfModEnvelope {
+	*ar {
+		arg gate, atk, sus, rel, base, mod;
+		^ (base * (1 + (mod * EnvGen.ar(
+			Env.linen(atk, sus, rel),
+			gate
+		))));			
+	}
+}
+
 Engine_Drumf : CroneEngine {
 
 	classvar <numVoices = 4;
@@ -48,13 +58,14 @@ Engine_Drumf : CroneEngine {
 				fc_env_ratio=2,
 				fc_base = 1000,
 
-				filter_gain=1;
-
-				/*
+				filter_gain=1,
+				
+				hp_fc = 4,
+				
 				gain_env_atk=0.01,
 				gain_env_sus=0.0,
-				gain_env_rel=0.3;*/
-
+				gain_env_rel=0.3;
+				
 
 				var gate, snd, osc, noise,
 				noise_amp, osc_amp, pitch,
@@ -64,16 +75,21 @@ Engine_Drumf : CroneEngine {
 
 				noise_amp_env = Env.linen(noise_amp_env_atk, noise_amp_env_sus, noise_amp_env_rel);
 				osc_amp_env = Env.linen(osc_amp_env_atk, osc_amp_env_sus, osc_amp_env_rel);
-				pitch_env = Env.linen(pitch_env_atk, pitch_env_sus, pitch_env_rel);
-				fc_env = Env.linen(fc_env_atk, fc_env_sus, fc_env_rel);
 
-				pitch = pitch_base * (1.0 +  (pitch_env_ratio * EnvGen.ar(pitch_env, gate)));
+				fc = DrumfModEnvelope.ar(gate,
+					fc_env_atk, fc_env_sus, fc_env_rel,
+					fc_base, fc_env_ratio);
+
+				pitch = DrumfModEnvelope.ar(gate,
+					pitch_env_atk, pitch_env_sus, pitch_env_rel,
+					pitch_base, pitch_env_ratio);
+				
 				noise_amp = EnvGen.ar(noise_amp_env, gate);
 				osc_amp = EnvGen.ar(osc_amp_env, gate);
-				fc = fc_base * (1.0 + (fc_env_ratio * EnvGen.ar(fc_env, gate)));
 
 				osc = SinOsc.ar(pitch, SinOsc.ar(pitch * fm_ratio) * fm_mod).distort;
 				osc = osc * osc_amp * osc_level;
+				
 				noise = SelectX.ar(noise_shape, [
 					LFNoise0.ar(noise_rate),
 					LFNoise1.ar(noise_rate),
@@ -85,6 +101,7 @@ Engine_Drumf : CroneEngine {
 				snd = osc + noise;
 
 				snd = MoogFF.ar(snd, fc, filter_gain);
+				snd = HPF.ar(snd, hp_fc);
 
 				Out.ar(out, snd*amp);
 			}).send(s);
@@ -104,6 +121,8 @@ Engine_Drumf : CroneEngine {
 				arg i;
 				Synth.new(\better_drumf, [\trig_bus, trig_bus[i].index], s);
 			});
+
+			s.sync;
 
 		}.play;
 

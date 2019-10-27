@@ -12,10 +12,8 @@ engine.name = 'Drumf'
 
 local BeatClock = require 'beatclock'
 
--- FIXME: include doesnt' seem to be working?
---local drumf = include('lib/drumf_engine.lua')
-local drumf = dofile(_path.code..'/hackalong/lib/drumf_engine.lua')
-local dr_pattern = dofile(_path.code..'/hackalong/lib/dr_pattern.lua')
+local drumf = include('lib/drumf_engine')
+local dr_pattern = include('lib/dr_pattern')
 
 local pattern_1 = dr_pattern.new(8, function(stage_value)
   if stage_value > 0 then engine.trig(1) end  
@@ -98,20 +96,6 @@ local function set_key_mode(mode)
   redraw()
 end 
 
---[[
-local function next_mode()
-  print("next mode")
-  if key_mode == KEY_MODE_PLAY then set_key_mode(KEY_MODE_WRITE)
-  elseif key_mode == KEY_MODE_WRITE then set_key_mode(KEY_MODE_PLAY) end
-end 
-
-local function previous_mode()
-  print("previous mode")
-  if key_mode == KEY_MODE_PLAY then set_key_mode(KEY_MODE_WRITE)
-  elseif key_mode == KEY_MODE_WRITE then set_key_mode(KEY_MODE_PLAY) end
-end 
---]]
-
 -- change filter envelope amount with encoders 2 and 3
 function enc(n, d)
   if n == 1 then
@@ -164,7 +148,7 @@ end
 function redraw()
   screen.clear()
   screen.font_face(40)
-  screen.font_size(12)
+  screen.font_size(10)
 
   draw_mode()
   draw_stage_indicator(pattern_1, 10)

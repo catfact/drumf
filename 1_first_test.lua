@@ -10,9 +10,6 @@
 -- set the 'name' field in the engine global
 engine.name = 'Drumf'
 
--- local drumf_params = include('drumf_params.lua')
-
--- FIXME: include didn't work after boot! wny not.
 local drumf = dofile('/home/we/dust/code/hackalong/lib/drumf_engine.lua')
 
 function init() 

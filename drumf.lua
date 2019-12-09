@@ -21,9 +21,9 @@ local BeatClock = require 'beatclock'
  num_stages = 16
 
  pattern_1 = dr_pattern.new(num_voices, num_stages,
-  function(voice_data)
+  function(pattern)
     for voice=1,num_voices do
-       if voice_data[voice] > 0 then engine.trig(voice) end
+       if pattern.voice_data[voice] > 0 then engine.trig(voice) end
     end
 end)
 

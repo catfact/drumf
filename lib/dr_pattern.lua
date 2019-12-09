@@ -3,6 +3,8 @@ Pattern: mult-voice sequence
 each stage has voice value array and transport data (loop points)
 --]]
 
+-- dofile("pod_copy.lua")
+
 local Pattern = {}
 
 local StageData = {}
@@ -11,10 +13,14 @@ local StageData = {}
 -- @param loop_data: { head=n, tail=n }
 StageData.new = function(voice_data, loop_data)
   local obj = {}
+  -- voice data is one number per voice, per stage (voice/param value)
   obj.voice_data = voice_data
+  -- loop data is two numbers per stage (loop counter max, current)
   obj.loop_data = loop_data
   return obj
 end
+
+
 
 Pattern.__index = Pattern
 
@@ -81,5 +87,65 @@ end
 -- arbitrary loop points
 -- loop points with counters!
 -- nested loop points with counters!!
+
+
+-- return string representation of stage data
+function Pattern:stage_data_string(stage_idx)
+   local str = "  { \n"
+   str = str.."    voice_data = { "
+   for i=1,self.num_voices do
+      str = str..self.stage_data[stage_idx].voice_data[i]..", "
+   end
+   str = str.."   },\n"
+   str = str.."    loop_data = {}" -- TODO
+   str = str.."\n  }"
+   return str
+end
+
+function Pattern:data_string()
+    local ns = self.num_stages
+   local nv = self.num_voices
+
+   local str = ""
+   -- TODO
+   str = str.."stage_data = {\n"
+   for stage=1,ns do
+      str = str..self:stage_data_string(stage)..", \n"
+   end
+   str = str.."}"
+   return str
+end
+
+-- save to file path
+function Pattern:save_to_file(name)
+   path = norns.state.data .. name .. ".lua"   
+   print("saving pattern to file path: "..path)    
+   local fd = io.open(path, "w+")
+   io.output(fd)
+   io.write(self:data_string())
+   io.close(fd)   
+end
+
+function Pattern:load_from_file(name)
+   path = norns.state.data .. name ..'.lua'
+   -- this will create global variable "stage_data"
+
+   print("loading pattern from file path: "..path)
+   dofile(path)
+   print(stage_data)
+
+   -- doesn't really copy the data
+   --self.stage_data = stage_data
+   
+   local ns = self.num_stages
+   local nv = self.num_voices
+
+   for stage=1,ns do
+      for voice=1,nv do
+	 self.stage_data[stage].voice_data[voice] = stage_data[stage].voice_data[voice]
+      end
+   end
+end
+
 
 return Pattern

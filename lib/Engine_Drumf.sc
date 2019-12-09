@@ -26,11 +26,10 @@ Engine_Drumf : CroneEngine {
 		var synth_param_names;
 		var s = context.server;
 
-		Routine {
 			// make a synthdef
 			drum_def = SynthDef.new(\better_drumf, {
 
-				arg out=0, trig_bus, amp=0.25,
+				arg out=0, trig_bus, amp=0.25, pan=0.0,
 
 				pitch_base=55,
 				fm_ratio=2.0, fm_mod=2.0, noise_rate=10000,
@@ -103,7 +102,7 @@ Engine_Drumf : CroneEngine {
 				snd = MoogFF.ar(snd, fc, filter_gain);
 				snd = HPF.ar(snd, hp_fc);
 
-				Out.ar(out, snd*amp);
+				Out.ar(out, Pan2.ar(snd*amp, pan));
 			}).send(s);
 
 			// send to the server
@@ -122,9 +121,9 @@ Engine_Drumf : CroneEngine {
 				Synth.new(\better_drumf, [\trig_bus, trig_bus[i].index], s);
 			});
 
-			s.sync;
 
-		}.play;
+			postln("drumf: done allocating synths");
+			s.sync;
 
 
 		this.addCommand("trig", "i", {
@@ -177,7 +176,8 @@ Engine_Drumf : CroneEngine {
 				postln(msg);
 				idx = msg[1] - 1;
 				if((idx >= 0) && (idx < numVoices), { 
-				  value = msg[2];
+					value = msg[2];
+					
 				  drum_synth[idx].set(name, value);
 				});
 			});
